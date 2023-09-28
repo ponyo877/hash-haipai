@@ -1,113 +1,178 @@
-import Image from 'next/image'
+'use client'
+
+import * as yup from 'yup'
+import { Box, Button, Container, FormControl, Stack, TextField, Typography } from "@mui/material"
+import { yupResolver } from '@hookform/resolvers/yup'
+import { Inter } from 'next/font/google'
+import React, { ChangeEvent } from 'react'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
+import { SubmitHandler, useForm } from "react-hook-form";
+
+const inter = Inter({ subsets: ['latin'] })
+
+
+declare module 'yup' {
+  interface StringSchema {
+    isExist(): this;
+  }
+  interface StringSchema{
+    isNotTooMany(): this;
+  }
+  interface StringSchema{
+    isValidNumber(): this;
+  }
+}
+
+yup.addMethod(
+  yup.string,
+  "isExist",
+  function () {
+    return this.test(
+      "isExist",
+      "存在する牌を入力してください",
+      function (value) {
+        const valueList: string[] = (value || '').split(",").map((item) => item.trim()) || [];
+        return valueList.every(item => haiEmun.some(item2 => item2.code === item))
+      }
+
+    );
+  }
+);
+
+yup.addMethod(
+  yup.string,
+  "isNotTooMany",
+  function () {
+    return this.test(
+      "isNotTooMany",
+      "同じ牌は4牌以下で入力してください",
+      function (value) {
+        const valueList: string[] = (value || '').split(",").map((item) => item.trim()) || [];
+        return haiEmun.every(e1 => valueList.filter(e2 => e2 === e1.code).length <= 4)
+      }
+    );
+  }
+);
+
+yup.addMethod(
+  yup.string,
+  "isValidNumber",
+  function () {
+    return this.test(
+      "isValidNumber",
+      "14牌入力してください",
+      function (value) {
+        const valueList: string[] = (value || '').split(",").map((item) => item.trim()) || [];
+        return valueList.length === 14
+      }
+    );
+  }
+);
+
+type InputType = yup.InferType<typeof schema>;
+
+const schema = yup.object({
+  haipai: yup.string().isValidNumber().isExist().isNotTooMany(),
+})
+
 
 export default function Home() {
+  const router = useRouter();
+  const { register, handleSubmit, formState: { errors }, } = useForm<InputType>({
+    resolver: yupResolver(schema),
+  });
+  const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : ''
+  const [createdUrl, setCreatedUrl] = React.useState<string | null>(null)
+
+  const onSubmit: SubmitHandler<InputType> = async (data) => {
+    const randPath = Math.random().toString(36).slice(-8)
+    await axios
+      .post(`/api/create`, {
+        key: randPath,
+        value: data.haipai?.join(','),
+      })
+    setCreatedUrl(randPath)
+  };
+
+  const parseArray = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>): string[] => {
+    return e.target.value.split(',');
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <>
+      <main>
+        <Container maxWidth='md'>
+          <Box mb={6}>
+            <Typography align='center'>
+              配牌をURL化できます<br />
+            </Typography>
+          </Box>
+          <Box>
+            <FormControl fullWidth>
+              <Stack spacing={3} direction='column' >
+                <TextField
+                  variant="outlined"
+                  required label="配牌"
+                  placeholder='1p,1p,1p,2p,3p,4p,5p,6p,7p,8p,9p,9p,9p,tn'
+                  {...register('haipai')}
+                  error={'haipai' in errors}
+                  helperText={errors.haipai?.message}
+                />
+              </Stack>
+              <Stack alignItems='center' mt={3} >
+                <Button color="primary" variant="contained" size="large" sx={{ width: '200px' }} onClick={handleSubmit(onSubmit)}>
+                  変換
+                </Button>
+              </Stack>
+            </FormControl>
+          </Box>
+          <Box height="20vh"></Box>
+          {createdUrl && (
+            <>
+              URL
+              <a id="link" href={`${origin}/${createdUrl}`}>{`${origin}/${createdUrl}`}</a>
+            </>
+          )}
+        </Container>
+      </main>
+    </>
   )
 }
+
+const haiEmun: { code: string; num: number }[] = [
+  { code: '1p', num: 1 },
+  { code: '2p', num: 2 },
+  { code: '3p', num: 3 },
+  { code: '4p', num: 4 },
+  { code: '5p', num: 5 },
+  { code: '6p', num: 6 },
+  { code: '7p', num: 7 },
+  { code: '8p', num: 8 },
+  { code: '9p', num: 9 },
+  { code: '1s', num: 10 },
+  { code: '2s', num: 11 },
+  { code: '3s', num: 12 },
+  { code: '4s', num: 13 },
+  { code: '5s', num: 14 },
+  { code: '6s', num: 15 },
+  { code: '7s', num: 16 },
+  { code: '8s', num: 17 },
+  { code: '9s', num: 18 },
+  { code: '1m', num: 19 },
+  { code: '2m', num: 20 },
+  { code: '3m', num: 21 },
+  { code: '4m', num: 22 },
+  { code: '5m', num: 23 },
+  { code: '6m', num: 24 },
+  { code: '7m', num: 25 },
+  { code: '8m', num: 26 },
+  { code: '9m', num: 27 },
+  { code: 'tn', num: 28 },
+  { code: 'nn', num: 29 },
+  { code: 'sh', num: 30 },
+  { code: 'pe', num: 31 },
+  { code: 'hk', num: 32 },
+  { code: 'ht', num: 33 },
+  { code: 'ch', num: 34 },
+]
