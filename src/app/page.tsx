@@ -16,10 +16,10 @@ declare module 'yup' {
   interface StringSchema {
     isExist(): this;
   }
-  interface StringSchema{
+  interface StringSchema {
     isNotTooMany(): this;
   }
-  interface StringSchema{
+  interface StringSchema {
     isValidNumber(): this;
   }
 }
@@ -86,17 +86,12 @@ export default function Home() {
   const [createdUrl, setCreatedUrl] = React.useState<string | null>(null)
 
   const onSubmit: SubmitHandler<InputType> = async (data) => {
-    const randPath = Math.random().toString(36).slice(-8)
     await axios
       .post(`/api/create`, {
-        key: randPath,
-        value: data.haipai?.join(','),
-      })
-    setCreatedUrl(randPath)
-  };
-
-  const parseArray = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>): string[] => {
-    return e.target.value.split(',');
+        value: data.haipai,
+      }).then(response => {
+        setCreatedUrl(response.data.id)
+      });
   };
 
   return (
