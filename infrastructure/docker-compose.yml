@@ -2,15 +2,18 @@ version: "3.7"
 
 services:
   app:
-    image: gcr.io/gke-test-287910/news-app:v0.0.20
+    # image: gcr.io/gke-test-287910/news-app:v0.0.20
+    build:
+      context: ../
+      dockerfile: Dockerfile
     ports:
-      - 8000:8000
+      - 8000:3000
     restart: always
     environment:
       DB_USER: root
       DB_PASSWORD: password
       DB_HOST: mysql
-      DB_DATABASE: haipai
+      DB_DATABASE: mahjong
       DB_PORT: 3306
     depends_on:
       mysql:
@@ -27,7 +30,7 @@ services:
       - ./mysql/sql:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: matome
+      MYSQL_DATABASE: mahjong
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-ppassword"]
       interval: 1m30s

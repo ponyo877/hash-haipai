@@ -1,16 +1,14 @@
 'use client'
 
 import * as yup from 'yup'
-import { Box, Button, Container, FormControl, Stack, TextField, Typography } from "@mui/material"
+import { Box, Button, Container, FormControl, Stack, TextField, Typography, Link } from "@mui/material"
 import { yupResolver } from '@hookform/resolvers/yup'
-import { Inter } from 'next/font/google'
-import React, { ChangeEvent } from 'react'
+import React from 'react'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { SubmitHandler, useForm } from "react-hook-form";
-
-const inter = Inter({ subsets: ['latin'] })
-
+import Tile from '@/pages/components/tile/index'
+import { isValid, sort, tileMap } from '@/lib/tile'
 
 declare module 'yup' {
   interface StringSchema {
@@ -33,7 +31,7 @@ yup.addMethod(
       "存在する牌を入力してください",
       function (value) {
         const valueList: string[] = (value || '').split(",").map((item) => item.trim()) || [];
-        return valueList.every(item => haiEmun.some(item2 => item2.code === item))
+        return valueList.every(item => tileMap.has(item))
       }
 
     );
@@ -49,7 +47,7 @@ yup.addMethod(
       "同じ牌は4牌以下で入力してください",
       function (value) {
         const valueList: string[] = (value || '').split(",").map((item) => item.trim()) || [];
-        return haiEmun.every(e1 => valueList.filter(e2 => e2 === e1.code).length <= 4)
+        return valueList.every(item => valueList.filter(i => i === item).length <= 4)
       }
     );
   }
@@ -77,20 +75,22 @@ const schema = yup.object({
 })
 
 
-export default function Home() {
+export default function Mahjong() {
   const router = useRouter();
   const { register, handleSubmit, formState: { errors }, } = useForm<InputType>({
     resolver: yupResolver(schema),
   });
   const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : ''
-  const [createdUrl, setCreatedUrl] = React.useState<string | null>(null)
+  const [haipai, setHaipai] = React.useState<string | null>(null)
+  const [hash, setHash] = React.useState<string | null>(null)
 
   const onSubmit: SubmitHandler<InputType> = async (data) => {
+    const haipaiList: string[] = (data.haipai || '').split(",").map((item) => item.trim()) || [];
     await axios
       .post(`/api/create`, {
-        value: data.haipai,
+        haipai: sort(haipaiList).join(','),
       }).then(response => {
-        setCreatedUrl(response.data.id)
+        setHash(response.data.id)
       });
   };
 
@@ -98,9 +98,12 @@ export default function Home() {
     <>
       <main>
         <Container maxWidth='md'>
-          <Box mb={6}>
+          <Box mb="5vh">
+            <Typography fontSize="h4.fontSize" align='center'>
+              配牌短縮URLジェネレータ<br />
+            </Typography>
             <Typography align='center'>
-              配牌をURL化できます<br />
+              1-9p:筒子, 1-9s:索子, 1-9m:萬子, 1-4z:東南西北, 5-7z:白發中<br />
             </Typography>
           </Box>
           <Box>
@@ -109,8 +112,11 @@ export default function Home() {
                 <TextField
                   variant="outlined"
                   required label="配牌"
-                  placeholder='1p,1p,1p,2p,3p,4p,5p,6p,7p,8p,9p,9p,9p,tn'
+                  placeholder='1p,1p,1p,2p,3p,4p,5p,6p,7p,8p,9p,9p,9p,1z'
                   {...register('haipai')}
+                  onChange={(e) => {
+                    setHaipai(e.target.value)
+                  }}
                   error={'haipai' in errors}
                   helperText={errors.haipai?.message}
                 />
@@ -122,52 +128,32 @@ export default function Home() {
               </Stack>
             </FormControl>
           </Box>
-          <Box height="20vh"></Box>
-          {createdUrl && (
-            <>
-              URL
-              <a id="link" href={`${origin}/${createdUrl}`}>{`${origin}/${createdUrl}`}</a>
-            </>
+          <Box height="5vh"></Box>
+          <Stack direction="row" spacing={2}>
+            {haipai && isValid(haipai) ? sort(haipai.split(',')).map((e, i) => (
+              <Box width="100vh" style={{
+                border: '1px solid black',
+                borderRadius: '10px',
+                margin: '1px',
+              }} >
+                <Tile key={i} tile={e} />
+              </Box>
+            )) : <></>}
+          </Stack>
+          <Box height="5vh"></Box>
+          {hash && (
+            <Box mb="5vh">
+              <Typography fontSize="h4.fontSize" align='center'>
+                <Link href={`/mahjong/${hash}`} underline="none">
+                  {`${origin}/mahjong/${hash}`}
+                </Link>
+              </Typography>
+            </Box>
           )}
+
         </Container>
       </main>
     </>
   )
 }
 
-const haiEmun: { code: string; num: number }[] = [
-  { code: '1p', num: 1 },
-  { code: '2p', num: 2 },
-  { code: '3p', num: 3 },
-  { code: '4p', num: 4 },
-  { code: '5p', num: 5 },
-  { code: '6p', num: 6 },
-  { code: '7p', num: 7 },
-  { code: '8p', num: 8 },
-  { code: '9p', num: 9 },
-  { code: '1s', num: 10 },
-  { code: '2s', num: 11 },
-  { code: '3s', num: 12 },
-  { code: '4s', num: 13 },
-  { code: '5s', num: 14 },
-  { code: '6s', num: 15 },
-  { code: '7s', num: 16 },
-  { code: '8s', num: 17 },
-  { code: '9s', num: 18 },
-  { code: '1m', num: 19 },
-  { code: '2m', num: 20 },
-  { code: '3m', num: 21 },
-  { code: '4m', num: 22 },
-  { code: '5m', num: 23 },
-  { code: '6m', num: 24 },
-  { code: '7m', num: 25 },
-  { code: '8m', num: 26 },
-  { code: '9m', num: 27 },
-  { code: 'tn', num: 28 },
-  { code: 'nn', num: 29 },
-  { code: 'sh', num: 30 },
-  { code: 'pe', num: 31 },
-  { code: 'hk', num: 32 },
-  { code: 'ht', num: 33 },
-  { code: 'ch', num: 34 },
-]

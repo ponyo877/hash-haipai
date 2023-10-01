@@ -7,8 +7,8 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model HaiPai {
-  id        Int      @id @default(autoincrement())
+model Haipai {
+  id        String   @unique
   haipai    String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 }
