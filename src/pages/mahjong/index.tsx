@@ -7,7 +7,7 @@ import React from 'react'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { SubmitHandler, useForm } from "react-hook-form";
-import Tile from '@/pages/components/tile/index'
+import Tile from '@/components/tile/index'
 import { isValid, sort, tileMap } from '@/lib/tile'
 
 declare module 'yup' {

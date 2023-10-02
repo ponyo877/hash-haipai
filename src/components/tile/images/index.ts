@@ -34,7 +34,7 @@ import z5 from './5z.svg';
 import z6 from './6z.svg';
 import z7 from './7z.svg';
 
-const tileImage = (tile: String) => {
+const tileImage = (tile: string) => {
   switch (tile) {
     case '1p':
       return p1;

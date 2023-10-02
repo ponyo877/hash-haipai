@@ -2,7 +2,7 @@
 
 import { Box, Container, Stack, Typography } from "@mui/material"
 import React from 'react'
-import Tile from '@/pages/components/tile/index'
+import Tile from '@/components/tile/index'
 import { GetServerSideProps } from 'next'
 import mysqlClient from '@/lib/prisma'
 import { isValid, sort } from '@/lib/tile'
