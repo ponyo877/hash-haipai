@@ -54,7 +54,7 @@ const Page = (props: Props) => {
                         <Box height="5vh"></Box>
                         <Stack direction="row" spacing={2}>
                             {haipai && isValid(haipai) ? sort(haipai.split(',')).map((e, i) => (
-                                <Box width="100vh" style={{
+                                <Box key={i} width="100vh" style={{
                                     border: '1px solid black', borderRadius: '10px',
                                     margin: '1px',
                                 }} >

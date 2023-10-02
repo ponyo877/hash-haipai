@@ -34,7 +34,7 @@ import z5 from './5z.svg';
 import z6 from './6z.svg';
 import z7 from './7z.svg';
 
-export const tileImage = (tile: String) => {
+const tileImage = (tile: String) => {
   switch (tile) {
     case '1p':
       return p1;
@@ -106,3 +106,5 @@ export const tileImage = (tile: String) => {
       return z7;
   }
 };
+
+export default tileImage;

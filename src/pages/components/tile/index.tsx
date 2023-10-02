@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { tileImage } from "./images";
+import tileImage  from "./images";
 
 interface TileProps {
     tile: string;
